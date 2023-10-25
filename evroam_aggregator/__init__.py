@@ -13,6 +13,8 @@ import azure.functions as func
 
 from constants import *
 CONNECT_STR = os.getenv('StorageAccountConnectionString')
+if not CONNECT_STR:
+    raise ValueError("StorageAccountConnectionString is not set or is empty!")
 blob_service_client = BlobServiceClient.from_connection_string(CONNECT_STR)
 
 def main(mytimer: func.TimerRequest) -> None:
