@@ -1,0 +1,3 @@
+cd C:\Users\cattonw\git\py-eecadata\; pip install .; cd "C:\Users\cattonw\git\AZ-MDP-FUNC-REPO\evroam_aggregator\templates"; configure_file_ingest .\EVRoam_01_Availabilities.xlsx
+cd C:\Users\cattonw\git\py-eecadata\; pip install .; cd "C:\Users\cattonw\git\AZ-MDP-FUNC-REPO\evroam_aggregator\templates"; configure_file_ingest .\EVRoam_02_ChargingStations.xlsx
+cd C:\Users\cattonw\git\py-eecadata\; pip install .; cd "C:\Users\cattonw\git\AZ-MDP-FUNC-REPO\evroam_aggregator\templates"; configure_file_ingest .\EVRoam_03_Sites.xlsx
