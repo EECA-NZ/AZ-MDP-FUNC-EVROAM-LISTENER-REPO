@@ -62,3 +62,5 @@ It is assumed that this project is active in VSCode (the proejct has been opened
 * Agree to overwrite the existing deployment.
 
 Deployment to the `prd` environment follows an equivalent process.
+
+Note that the deployment requires an appropriate `StorageAccountConnectionString` parameter to be set manually in the Azure Portal.
