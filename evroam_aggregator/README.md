@@ -14,8 +14,6 @@ The function uses a `TimerTrigger` to run at a set schedule. This is defined by 
 
 For example, a cron expression like `0 0 5 * * *` means: "Run this function at 5 AM every day". 
 
-In this particular case, the cron expression for the function is set to execute once every day at 5 AM.
-
 ## Set Up and Execution
 
 1. Make sure you have the necessary environment variables set up in your Azure Function. These include your Blob Storage connection strings, database connection details, and other important configuration values.
