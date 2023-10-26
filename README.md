@@ -7,6 +7,10 @@ It contains two functions:
 * `evroam_listener` is an endpoint to which the evroam push notification subscription can be directed. When notified by evroam, it pulls down json files containing updates to the evroam dataset.
 * `evroam_aggregator` runs on a cron schedule and aggregates all of the objects that have been retrieved into an excel workbook for delivery into our data warehousing system.
 
+Once the function is deployed into the `dev`/`prd` environment, follow the instructions in the `scripts/subscribe_evroam_listener.py` to activate a subscription to push notifications from evroam. Note that only one subscription can be active (for a given EVRoam API key) at a time.
+
+## Development process overview:
+
 We use the Azure Functions extension in Visual Studio Code to develop Python function apps.
 
 The function is tested locally before deploying it to the environment of Azure Functions.
@@ -49,3 +53,12 @@ Alternatively, the function app can be run via command line as follows:
 pip install -r requirements.txt
 func start
 ```
+
+## To deploy the function app in the `dev` environment.
+
+It is assumed that this project is active in VSCode (the proejct has been opened via `Open Folder`), and that the user has logged into Azure with VSCode.
+* Navigate in `Azure Resources` to the `eeca-func-DWBI-evroam-listener-dev-aue` function app.
+* Right-click on `eeca-func-DWBI-evroam-listener-dev-aue`, and select "Deploy to Function App".
+* Agree to overwrite the existing deployment.
+
+Deployment to the `prd` environment follows an equivalent process.
