@@ -34,7 +34,13 @@ def main(mytimer: func.TimerRequest) -> None:
     blobs_to_delete = []
 
     # loop over the files in the blob storage
-    for blob in container_client.list_blobs(name_starts_with=JSON_FILE_PATH_PREFIX):
+    blobs = list(container_client.list_blobs(name_starts_with=JSON_FILE_PATH_PREFIX))
+
+    # Sort blobs by creation time
+    blobs_sorted = sorted(blobs, key=lambda b: b.creation_time)
+
+    # loop over the files in the blob storage
+    for blob in blobs_sorted:
         if len(blobs_to_delete) >= MAX_JSON_INGEST_BATCH:
             break
         if blob.name.endswith('.json'):

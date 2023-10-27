@@ -5,21 +5,19 @@ To configure the script, first set the environment variables as follows:
 
 EVROAM_SUBSCRIPTION_KEY: API key for EVRoam
 - Log into the EVRoam developer portal (https://evroam.portal.azure-api.net/). 
-  (Ask Will Catton for the API key stored in his 1password account.)
 - Navigate to your [developer profile](https://evroam.portal.azure-api.net/developer) and click 'Show API subscription key'.
 - Copy the key and set it as the value for the SUBSCRIPTION_KEY environment variable.
 
 EVROAM_WEBHOOK_ENDPOINT: URL of evroam_listener function
 - Ensure the evroam_listener function is active in your deployed function app.
 - Click "Get Function Url" in the Azure portal to get the URL for the function. 
-  Select default (host key). The URL should look like this: 
-  https://eeca-func-dwbi-dev-aue.azurewebsites.net/api/evroam_listener?code=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX&clientId=default
+  Select default (host key).
 - Copy the URL and set it as the value for the WEBHOOK_ENDPOINT environment variable.
 
 After setting up the environment variables, the script can be run to subscribe to the EVRoam webhook listener. 
 Upon successful execution, the script will return a response like this:
 
-b'"Subscription created with end point https://eeca-func-dwbi-<env>-aue.azurewebsites.net/api/evroam_listener?code=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX&clientId=default"'
+b'"Subscription created with end point https://<function-app-name-endpoint-url>"'
 """
 
 import os
@@ -71,12 +69,12 @@ try:
     # Establish connection and make request
     conn = http.client.HTTPSConnection('evroam.azure-api.net')
     conn.request("POST", "/consumer/api/Notification?%s" % params, body, headers)
-    
+
     # Get response and print
     response = conn.getresponse()
     data = response.read()
     print(data)
-    
+
     # Close connection
     conn.close()
 
