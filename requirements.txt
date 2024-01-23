@@ -7,3 +7,4 @@ azure-storage-blob
 inflection
 pandas
 requests
+azure-identity
