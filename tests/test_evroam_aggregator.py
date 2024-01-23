@@ -1,9 +1,10 @@
+"""Module for testing the evroam_aggregator functionality."""
+
 import unittest
 
-class EvroamAggregatorTest(unittest.TestCase):
+class TestEvroamAggregator(unittest.TestCase):
+    """Tests for the evroam_aggregator function."""
 
-    def test_one_equals_one(self):
+    def test_basic_assertion(self):
+        """Test to ensure basic assertions work."""
         self.assertEqual(1, 1)
-
-if __name__ == '__main__':
-    unittest.main()
