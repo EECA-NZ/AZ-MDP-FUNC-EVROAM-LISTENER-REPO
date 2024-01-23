@@ -1,3 +1,5 @@
+[![Pylint](https://github.com/EECA-NZ/AZ-MDP-FUNC-EVROAM-LISTENER-REPO/actions/workflows/pylint.yml/badge.svg)](https://github.com/EECA-NZ/AZ-MDP-FUNC-EVROAM-LISTENER-REPO/actions/workflows/pylint.yml) [![Deploy](https://github.com/EECA-NZ/AZ-MDP-FUNC-EVROAM-LISTENER-REPO/actions/workflows/deploy-to-dev.yml/badge.svg)](https://github.com/EECA-NZ/AZ-MDP-FUNC-EVROAM-LISTENER-REPO/actions/workflows/deploy-to-dev.yml)
+
 # AZ-MDP-FUNC-EVROAM-LISTENER-REPO
 
 This repository is for the function app deployed at `eeca-func-DWBI-evroam-listener-[dev/prd]-aue` in the resource group `eeca-rg-DWBI-[dev/prd]-aue`.

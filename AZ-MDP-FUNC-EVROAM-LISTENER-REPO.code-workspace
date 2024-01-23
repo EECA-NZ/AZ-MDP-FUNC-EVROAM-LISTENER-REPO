@@ -1,0 +1,25 @@
+{
+	"folders": [
+		{
+			"path": "evroam_aggregator"
+		},
+		{
+			"path": "evroam_listener"
+		}
+	],
+	"settings": {
+		"debug.internalConsoleOptions": "neverOpen"
+	},
+    "launch": {
+        "configurations": [],
+        "compounds": [
+            {
+                "name": "Attach to all apps",
+                "configurations": [
+                    "Attach to evroam_aggregator",
+                    "Attach to evroam_listener"
+                ]
+            }
+        ]
+    }
+}

@@ -7,3 +7,6 @@ azure-storage-blob
 inflection
 pandas
 requests
+azure-identity
+pytest-cov
+shapely
