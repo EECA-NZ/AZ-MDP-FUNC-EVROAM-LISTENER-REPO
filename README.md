@@ -1,4 +1,4 @@
-[![Pylint](https://github.com/EECA-NZ/AZ-MDP-FUNC-EVROAM-LISTENER-REPO/actions/workflows/pylint.yml/badge.svg)](https://github.com/EECA-NZ/AZ-MDP-FUNC-EVROAM-LISTENER-REPO/actions/workflows/pylint.yml) [![Deploy](https://github.com/EECA-NZ/AZ-MDP-FUNC-EVROAM-LISTENER-REPO/actions/workflows/deploy-to-dev.yml/badge.svg)](https://github.com/EECA-NZ/AZ-MDP-FUNC-EVROAM-LISTENER-REPO/actions/workflows/deploy-to-dev.yml)
+[![Pylint](https://github.com/EECA-NZ/AZ-MDP-FUNC-EVROAM-LISTENER-REPO/actions/workflows/pylint.yml/badge.svg)](https://github.com/EECA-NZ/AZ-MDP-FUNC-EVROAM-LISTENER-REPO/actions/workflows/pylint.yml) [![Deploy](https://github.com/EECA-NZ/AZ-MDP-FUNC-EVROAM-LISTENER-REPO/actions/workflows/deploy-to-dev.yml/badge.svg)](https://github.com/EECA-NZ/AZ-MDP-FUNC-EVROAM-LISTENER-REPO/actions/workflows/deploy-to-dev.yml) [![Unit Test](https://github.com/EECA-NZ/AZ-MDP-FUNC-EVROAM-LISTENER-REPO/actions/workflows/python-tests.yml/badge.svg)](https://github.com/EECA-NZ/AZ-MDP-FUNC-EVROAM-LISTENER-REPO/actions/workflows/python-tests.yml)
 
 # AZ-MDP-FUNC-EVROAM-LISTENER-REPO
 
