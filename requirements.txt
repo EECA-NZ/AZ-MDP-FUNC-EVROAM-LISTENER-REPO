@@ -8,5 +8,3 @@ inflection
 pandas
 requests
 azure-identity
-pytest-cov
-shapely

@@ -18,7 +18,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -r requirements-dev.txt
-        pip install pytest azure-functions coverage
+        pip install pytest pytest-mock coverage
 
     - name: Run tests with coverage
       run: |
