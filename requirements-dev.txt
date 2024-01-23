@@ -1,0 +1,8 @@
+# Requirements to develop and test
+
+azure-functions
+azure-storage-blob
+inflection
+pandas
+requests
+azure-identity
