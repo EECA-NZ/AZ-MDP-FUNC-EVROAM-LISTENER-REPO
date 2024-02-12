@@ -4,7 +4,7 @@ This Azure Function is designed to automatically fetch the latest EVRoam sites d
 
 ## How it works
 
-The function uses a `TimerTrigger` with a cron expression to schedule executions. The cron expression `0 0 0 * * 0` configures the function to run weekly at midnight on Sunday.
+The function uses a `TimerTrigger` with a cron expression to schedule executions. The cron expression `0 30 1 * * *` configures the function to run daily.
 
 ## Functionality
 

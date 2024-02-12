@@ -4,7 +4,7 @@ This Azure Function is designed to automatically retrieve the latest information
 
 ## How it works
 
-The function uses a `TimerTrigger` with a cron expression to schedule its executions. The cron expression `0 0 0 * * 0` is set to trigger the function weekly, precisely at midnight on Sunday.
+The function uses a `TimerTrigger` with a cron expression to schedule executions. The cron expression `0 30 1 * * *` configures the function to run daily.
 
 ## Functionality
 
