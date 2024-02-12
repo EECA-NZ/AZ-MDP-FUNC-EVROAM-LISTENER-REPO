@@ -22,11 +22,14 @@ To begin work on the function app, clone the repository from GitHub. The functio
 ## To clone the repository from GitHub:
 
 *	Open a terminal window
-*   Change to the directory where you want to clone the repositor
-*  Run the following command:
+*   Change to the directory where you want to clone the repository
+*   Clone the `dev` branch of the repository from GitHub
+*   Create a new branch for your work
 ```bash
-git clone --recurse-submodules git@github.com:EECA-NZ/AZ-MDP-FUNC-EVROAM-LISTENER-REPO.git
+git clone --recurse-submodules git@github.com:EECA-NZ/AZ-MDP-FUNC-EVROAM-LISTENER-REPO.git -b dev
+git checkout -b dev-[task-description-from-teams-task-planner-board]
 ```
+Then when you are ready to merge your changes into the `dev` branch, create a pull request in GitHub.
 
 ## To see the function in Azure Portal:
 
