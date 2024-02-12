@@ -4,18 +4,20 @@
 
 This repository is for the function app deployed at `eeca-func-DWBI-evroam-listener-[dev/prd]-aue` in the resource group `eeca-rg-DWBI-[dev/prd]-aue`.
 
-It contains two functions:
+It contains four functions:
 
 * `evroam_listener` is an endpoint to which the evroam push notification subscription can be directed. When notified by evroam, it pulls down json files containing updates to the evroam dataset.
 * `evroam_aggregator` runs on a cron schedule and aggregates all of the objects that have been retrieved into an excel workbook for delivery into our data warehousing system.
+* `fetch_evroam_sites` runs on a cron schedule and pulls EVRoam site information for delivery into our data warehousing system. This is to ensure that the EVRoam site data is up-to-date, even if the push notifications fail for any reason.
+* `fetch_evroam_chargingstations` runs on a cron schedule and pulls EVRoam charging station and availability information for delivery into our data warehousing system. This is to ensure that the EVRoam data is up-to-date, even if the push notifications fail for any reason.
 
 Once the function is deployed into the `dev`/`prd` environment, follow the instructions in the `scripts/subscribe_evroam_listener.py` to activate a subscription to push notifications from evroam. Note that only one subscription can be active (for a given EVRoam API key) at a time.
 
 ## Development process overview:
 
-We use the Azure Functions extension in Visual Studio Code to develop Python function apps.
+We use the Azure Functions extension in Visual Studio Code to develop Python function apps. The function is tested locally before deploying it to the environment of Azure Functions. Development of the function app is done in the `dev` environment. Once the function app is tested and working as expected, it is deployed to the `prd` environment.
 
-The function is tested locally before deploying it to the environment of Azure Functions.
+To begin work on the function app, clone the repository from GitHub. The function app is developed in a branch off of the `dev` branch. Merging changes into the `dev` branch triggers the GitHub Actions workflow to deploy the function app to the `dev` environment. Once the function app is ready for deployment, it is merged into the `main` branch. This triggers the GitHub Actions workflow to deploy the function app to the `prd` environment.
 
 ## To clone the repository from GitHub:
 
@@ -56,9 +58,11 @@ pip install -r requirements.txt
 func start
 ```
 
-## To deploy the function app in the `dev` environment.
+## Manual deployment the function app in the `dev` environment.
 
-It is assumed that this project is active in VSCode (the proejct has been opened via `Open Folder`), and that the user has logged into Azure with VSCode.
+Manual deployment is deprecated and has been superseded by the GitHub Actions workflow. The following is retained for reference only.
+
+It is assumed that this project is active in VSCode (the project has been opened via `Open Folder`), and that the user has logged into Azure with VSCode.
 * Navigate in `Azure Resources` to the `eeca-func-DWBI-evroam-listener-dev-aue` function app.
 * Right-click on `eeca-func-DWBI-evroam-listener-dev-aue`, and select "Deploy to Function App".
 * Agree to overwrite the existing deployment.
