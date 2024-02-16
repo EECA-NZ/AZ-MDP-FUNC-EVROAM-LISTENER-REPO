@@ -34,7 +34,9 @@ def main(mytimer: func.TimerRequest) -> None:
     all_data = fetch_evroam_sites_data()
     if all_data:
         df = process_data_to_dataframe(all_data)
+        logging.info(f"Collected site data: {len(df)} rows")
         upload_csv_to_blob(df)
+        logging.info(f"Delivered site data to {BLOB_NAME}")
     logging.info('Python timer trigger function ran at %s', utc_timestamp)
 
 
