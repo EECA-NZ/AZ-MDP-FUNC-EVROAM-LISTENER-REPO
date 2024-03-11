@@ -60,7 +60,7 @@ class EVRoamSites(Base):
         'description': 'Flag to indicate if the provider has marked the site as deleted.'})
     SiteId = Column(String(255), index=True, info={
         'description': 'Vendor provided UNIQUE ID to link to the ChargingStation worksheet.'})
-    WaterMark = Column(DateTime, info={
+    WaterMark = Column(DateTime, default=datetime.utcnow, info={
         'description': 'Timestamp for the last update.'})
     ODSBatchID = Column(Integer, info={
         'description': 'Batch ID for the operation.'})
@@ -131,7 +131,7 @@ class EVRoamChargingStations(Base):
                              info={'description': 'Flag to indicate if the provider has marked the charging station as deleted.'})
     SiteId = Column(String(36), ForeignKey('EVRoam.dboEVRoamSites.SiteId'), 
                     info={'description': 'SiteId from the previous Site worksheet. IDs in this column do not need to be unique as you can have many charging stations to one site.'})
-    WaterMark = Column(DateTime, 
+    WaterMark = Column(DateTime, default=datetime.utcnow,
                        info={'description': 'Timestamp for the last update.'})
     ODSBatchID = Column(Integer, 
                         info={'description': 'Batch ID for the operation.'})
@@ -174,7 +174,7 @@ class EVRoamAvailabilities(Base):
                          info={'description': 'The amount of power (in kW) available at the charging station at the time of this availability record.'})
     Operator = Column(String(255),
                       info={'description': 'Operator of the charging station.'})
-    WaterMark = Column(DateTime,
+    WaterMark = Column(DateTime, default=datetime.utcnow,
                        info={'description': 'Timestamp for the last update of this record.'})
     ODSBatchID = Column(Integer,
                         info={'description': 'Batch ID associated with the operation that generated or modified this record.'})
