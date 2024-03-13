@@ -9,14 +9,14 @@ import urllib
 import logging
 import hashlib
 from datetime import datetime
+from contextlib import contextmanager
 
 from sqlalchemy import create_engine, CHAR
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import String, Float, Boolean, Integer, DateTime
 from sqlalchemy import Column, VARBINARY
-#from sqlalchemy import ForeignKey
-#from sqlalchemy.orm import relationship
+
 
 env = os.getenv("env", "dev")
 
@@ -25,6 +25,8 @@ SCHEMA = "EECAEVRoam"
 Base = declarative_base()
 
 # pylint: disable=too-few-public-methods
+# pylint: disable=broad-exception-caught
+
 
 class EVRoamSites(Base):
     """
@@ -32,34 +34,49 @@ class EVRoamSites(Base):
     comprehensive details about each site, including its location, operational status,
     and various attributes that describe the site's features and offerings.
     """
+
     __tablename__ = "dboEVRoamSites"
     __table_args__ = {"schema": SCHEMA}
     ODSdboEVRoamSitesSKID = Column(Integer, primary_key=True, autoincrement=True)
-    AccessLocations = Column(String(4096), info={"description": "JSON string of access locations."})
-    Address = Column(String(2048), info={"description": "Physical address of the site."})
+    AccessLocations = Column(
+        String(4096), info={"description": "JSON string of access locations."}
+    )
+    Address = Column(
+        String(2048), info={"description": "Physical address of the site."}
+    )
     CarParkCount = Column(
         Integer, info={"description": "Number of car parks available at the site."}
     )
     HasCarparkCost = Column(
         Boolean,
-        info={"description": "Indicates if there is a cost associated with the carpark."},
+        info={
+            "description": "Indicates if there is a cost associated with the carpark."
+        },
     )
     HasTouristAttraction = Column(
         Boolean,
         info={"description": "Indicates if there is a tourist attraction nearby."},
     )
-    Is24Hours = Column(Boolean, info={"description": "States if available 24 hrs or not."})
-    MaxTimeLimit = Column(String(255), info={"description": "Maximum time limit for parking."})
+    Is24Hours = Column(
+        Boolean, info={"description": "States if available 24 hrs or not."}
+    )
+    MaxTimeLimit = Column(
+        String(255), info={"description": "Maximum time limit for parking."}
+    )
     Name = Column(String(255), info={"description": "Name of Site."})
     Operator = Column(String(255), info={"description": "Operator of the site."})
     ProviderDeleted = Column(
         Boolean,
-        info={"description": "Flag to indicate if the provider has marked the site as deleted."},
+        info={
+            "description": "Flag to indicate if the provider has marked the site as deleted."
+        },
     )
     SiteId = Column(
         String(255),
         index=True,
-        info={"description": "Vendor provided UNIQUE ID to link to the ChargingStation worksheet."},
+        info={
+            "description": "Vendor provided UNIQUE ID to link to the ChargingStation worksheet."
+        },
     )
     WaterMark = Column(
         DateTime,
@@ -67,7 +84,9 @@ class EVRoamSites(Base):
         info={"description": "Timestamp for the last update."},
     )
     ODSBatchID = Column(Integer, info={"description": "Batch ID for the operation."})
-    ODSEffectiveFrom = Column(DateTime, info={"description": "Effective from date for SCD."})
+    ODSEffectiveFrom = Column(
+        DateTime, info={"description": "Effective from date for SCD."}
+    )
     ODSEffectiveTo = Column(
         DateTime, info={"description": "Effective to date for SCD, null if current."}
     )
@@ -75,9 +94,12 @@ class EVRoamSites(Base):
         Boolean, info={"description": "Indicates if the record is the current record."}
     )
     ODSDMLType = Column(CHAR(1), info={"description": "Type of DML operation."})
-    ODSHashKey = Column(VARBINARY(8000), info={"description": "Hash key for detecting changes."})
-    ODSExternalID = Column(String(50), info={"description": "External ID for reference."})
-    #charging_stations = relationship("EVRoamChargingStations", back_populates="site")
+    ODSHashKey = Column(
+        VARBINARY(8000), info={"description": "Hash key for detecting changes."}
+    )
+    ODSExternalID = Column(
+        String(50), info={"description": "External ID for reference."}
+    )
 
 
 class EVRoamChargingStations(Base):
@@ -86,9 +108,12 @@ class EVRoamChargingStations(Base):
     specific to individual charging stations, such as the type of connectors available,
     the station's operational status, and its physical characteristics.
     """
+
     __tablename__ = "dboEVRoamChargingStations"
     __table_args__ = {"schema": SCHEMA}
-    ODSdboEVRoamChargingStationsSKID = Column(Integer, primary_key=True, autoincrement=True)
+    ODSdboEVRoamChargingStationsSKID = Column(
+        Integer, primary_key=True, autoincrement=True
+    )
     AssetId = Column(
         String(255),
         info={
@@ -101,7 +126,9 @@ class EVRoamChargingStations(Base):
     ChargingStationId = Column(
         String(255),
         index=True,
-        info={"description": "Vendor provided UNIQUE ID to link to the Connector worksheet."},
+        info={
+            "description": "Vendor provided UNIQUE ID to link to the Connector worksheet."
+        },
     )
     Connectors = Column(
         String(4096),
@@ -109,10 +136,14 @@ class EVRoamChargingStations(Base):
             "description": "Maximum of 3 public image URLs per charging station comma separated."
         },
     )
-    Current = Column(String(255), info={"description": 'Acceptable values are "AC" or "DC".'})
+    Current = Column(
+        String(255), info={"description": 'Acceptable values are "AC" or "DC".'}
+    )
     DateFirstOperational = Column(
         DateTime,
-        info={"description": "Date it was first able to be used. Date without time is acceptable."},
+        info={
+            "description": "Date it was first able to be used. Date without time is acceptable."
+        },
     )
     FloorLevel = Column(
         String(255),
@@ -148,10 +179,16 @@ class EVRoamChargingStations(Base):
     )
     KwRated = Column(
         Integer,
-        info={"description": "The rated power output of the charging station in kilowatts."},
+        info={
+            "description": "The rated power output of the charging station in kilowatts."
+        },
     )
-    Locationlat = Column(Float, info={"description": "Latitude of the charging station location."})
-    Locationlon = Column(Float, info={"description": "Longitude of the charging station location."})
+    Locationlat = Column(
+        Float, info={"description": "Latitude of the charging station location."}
+    )
+    Locationlon = Column(
+        Float, info={"description": "Longitude of the charging station location."}
+    )
     Manufacturer = Column(
         String(2048), info={"description": "Manufacturer of the charging station."}
     )
@@ -160,7 +197,8 @@ class EVRoamChargingStations(Base):
         DateTime,
         info={
             "description": (
-                "Datetime of any planned outages, in the format; " "startDateTime,endDateTime."
+                "Datetime of any planned outages, in the format; "
+                "startDateTime,endDateTime."
             )
         },
     )
@@ -168,7 +206,9 @@ class EVRoamChargingStations(Base):
         String(255),
         info={"description": "Name of the operator of the charging station."},
     )
-    Owner = Column(String(255), info={"description": "Name of the owner of the charging station."})
+    Owner = Column(
+        String(255), info={"description": "Name of the owner of the charging station."}
+    )
     ProviderDeleted = Column(
         Boolean,
         info={
@@ -187,23 +227,15 @@ class EVRoamChargingStations(Base):
             )
         },
     )
-    #SiteSKID = Column(
-    #    Integer,
-    #    ForeignKey("EECAEVRoam.dboEVRoamSites.ODSdboEVRoamSitesSKID"),
-    #    info={
-    #        "description": (
-    #            "Site entry row number from the previous Site worksheet. IDs in this column do"
-    #            "not need to be unique as you can have many charging stations to one site."
-    #        )
-    #    },
-    #)
     WaterMark = Column(
         DateTime,
         default=datetime.utcnow,
         info={"description": "Timestamp for the last update."},
     )
     ODSBatchID = Column(Integer, info={"description": "Batch ID for the operation."})
-    ODSEffectiveFrom = Column(DateTime, info={"description": "Effective from date for SCD."})
+    ODSEffectiveFrom = Column(
+        DateTime, info={"description": "Effective from date for SCD."}
+    )
     ODSEffectiveTo = Column(
         DateTime, info={"description": "Effective to date for SCD, null if current."}
     )
@@ -211,11 +243,12 @@ class EVRoamChargingStations(Base):
         Boolean, info={"description": "Indicates if the record is the current record."}
     )
     ODSDMLType = Column(CHAR(1), info={"description": "Type of DML operation."})
-    ODSHashKey = Column(VARBINARY(8000), info={"description": "Hash key for detecting changes."})
-    ODSExternalID = Column(String(50), info={"description": "External ID for reference."})
-    #site = relationship("EVRoamSites", back_populates="charging_stations")
-    #connectors = relationship("EVRoamConnectors", back_populates="charging_station")
-    #availabilities = relationship("EVRoamAvailabilities", back_populates="charging_station")
+    ODSHashKey = Column(
+        VARBINARY(8000), info={"description": "Hash key for detecting changes."}
+    )
+    ODSExternalID = Column(
+        String(50), info={"description": "External ID for reference."}
+    )
 
 
 class EVRoamAvailabilities(Base):
@@ -224,6 +257,7 @@ class EVRoamAvailabilities(Base):
     log changes in availability, such as when a station becomes occupied or available,
     and includes timestamps for these status updates.
     """
+
     __tablename__ = "dboEVRoamAvailabilities"
     __table_args__ = {"schema": SCHEMA}
     ODSdboEVRoamAvailabilitiesSKID = Column(
@@ -253,16 +287,6 @@ class EVRoamAvailabilities(Base):
             )
         },
     )
-    #ChargingStationSKID = Column(
-    #    Integer,
-    #    ForeignKey("EECAEVRoam.dboEVRoamChargingStations.ODSdboEVRoamChargingStationsSKID"),
-    #    info={
-    #        "description": (
-    #            "Foreign key for the row in the charging "
-    #            "stations table this availability record pertains to."
-    #        )
-    #    },
-    #)
     KwAvailable = Column(
         Float,
         info={
@@ -272,7 +296,9 @@ class EVRoamAvailabilities(Base):
             )
         },
     )
-    Operator = Column(String(255), info={"description": "Operator of the charging station."})
+    Operator = Column(
+        String(255), info={"description": "Operator of the charging station."}
+    )
     WaterMark = Column(
         DateTime,
         default=datetime.utcnow,
@@ -282,7 +308,8 @@ class EVRoamAvailabilities(Base):
         Integer,
         info={
             "description": (
-                "Batch ID associated with the operation " "that generated or modified this record."
+                "Batch ID associated with the operation "
+                "that generated or modified this record."
             )
         },
     )
@@ -321,7 +348,9 @@ class EVRoamAvailabilities(Base):
     )
     ODSHashKey = Column(
         VARBINARY(8000),
-        info={"description": "A hash key generated from the record's contents to detect changes."},
+        info={
+            "description": "A hash key generated from the record's contents to detect changes."
+        },
     )
     ODSExternalID = Column(
         String(50),
@@ -332,11 +361,6 @@ class EVRoamAvailabilities(Base):
             )
         },
     )
-    #ChargingStation = relationship(
-    #    "EVRoamChargingStations",
-    #    backref="availabilities",
-    #    info={"description": "Relationship back to the associated charging station."},
-    #)
 
 
 class EVRoamConnectors(Base):
@@ -364,12 +388,7 @@ class EVRoamConnectors(Base):
                 "connectors to one chargingStation."
             )
         },
-        )
-    #chargingStationSKID = Column(
-    #    Integer,
-    #    ForeignKey('EECAEVRoam.dboEVRoamChargingStations.ODSdboEVRoamChargingStationsSKID'),
-    #    nullable=False,
-    #)
+    )
     connectorType = Column(
         String(255),
         info={
@@ -382,10 +401,10 @@ class EVRoamConnectors(Base):
     )
     operationStatus = Column(
         String(255),
-        info={"description": 'Acceptable values are: "Operative", "Inoperative", "Unknown".'},
+        info={
+            "description": 'Acceptable values are: "Operative", "Inoperative", "Unknown".'
+        },
     )
-
-    #charging_station = relationship("EVRoamChargingStations", back_populates="connectors")
 
 
 def get_engine(verbose=False):
@@ -455,6 +474,20 @@ def get_session():
     return session()
 
 
+@contextmanager
+def session_scope():
+    """Provide a transactional scope around a series of operations."""
+    session = get_session()
+    try:
+        yield session
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
 def generate_hash_key(*args):
     """
     Generates a SHA-256 hash key from the provided arguments.
@@ -495,45 +528,7 @@ def validate_required_fields(model_class, provided_fields):
                 raise ValueError(f"Missing required field: {column.name}")
 
 
-#def add_or_update_record(model, unique_keys, hash_keys, **fields):
-#    session = get_session()
-#    try:
-#        # Generate hash key for incoming data
-#        hash_values = [fields[key] for key in hash_keys]
-#        incoming_hash = generate_hash_key(*hash_values)
-#
-#        # Check if the record already exists and if it's the current version
-#        query = session.query(model).filter_by(**unique_keys, ODSIsCurrent=True)
-#        existing_record = query.first()
-#
-#        if existing_record and existing_record.ODSHashKey == incoming_hash:
-#            return getattr(existing_record, model.__primary_key__)  # Assuming a single PK field
-#
-#        if existing_record:
-#            existing_record.ODSEffectiveTo = datetime.now()
-#            existing_record.ODSIsCurrent = False
-#
-#        # Insert new or updated record as current
-#        new_record = model(
-#            **unique_keys,
-#            **fields,
-#            ODSEffectiveFrom=datetime.now(),
-#            ODSEffectiveTo=None,
-#            ODSIsCurrent=True,
-#            ODSHashKey=incoming_hash,
-#        )
-#        session.add(new_record)
-#        session.commit()
-#        return getattr(new_record, model.__primary_key__)
-#    except Exception as exception:
-#        session.rollback()
-#        logging.warning("Error: %s", exception)
-#        raise
-#    finally:
-#        session.close()
-
-
-def add_or_update_record(model, unique_keys, hash_keys, **fields):
+def add_or_update_record(model, unique_keys, hash_keys, session=None, **fields):
     """
     Adds a new record or updates an existing one using SCD Type 2 logic.
 
@@ -546,12 +541,17 @@ def add_or_update_record(model, unique_keys, hash_keys, **fields):
         model (Base): The SQLAlchemy model class for the table.
         unique_keys (dict): Dictionary of unique key-value pairs identifying the record.
         hash_keys (list): List of keys used to generate the hash for change detection.
+        session (sqlalchemy.orm.session.Session, optional): The SQLAlchemy session to use. Optional.
         **fields: Additional fields of the record, passed as keyword arguments.
 
     Returns:
         The primary key of the newly added or updated record.
     """
-    session = get_session()
+    own_session = False
+    if session is None:
+        session = get_session()
+        own_session = True
+
     try:
         # Generate hash key for incoming data
         hash_values = [fields[key] for key in hash_keys]
@@ -580,20 +580,23 @@ def add_or_update_record(model, unique_keys, hash_keys, **fields):
             ODSHashKey=incoming_hash,
         )
         session.add(new_record)
-        session.commit()
+        if own_session:
+            session.commit()
 
         # Dynamically get the PK name and value for the new record
         pk_name = model.__table__.primary_key.columns.keys()[0]
         return getattr(new_record, pk_name)
     except Exception as exception:
-        session.rollback()
+        if own_session:
+            session.rollback()
         logging.warning("Error: %s", exception)
         raise
     finally:
-        session.close()
+        if own_session:
+            session.close()
 
 
-def add_or_update_evroam_site(site_id, name, address, **other_fields):
+def add_or_update_evroam_site(site_id, name, address, session=None, **other_fields):
     """
     Adds a new EVRoam site or updates an existing one using SCD
     Type 2 logic.
@@ -622,12 +625,23 @@ def add_or_update_evroam_site(site_id, name, address, **other_fields):
     unique_keys = {"SiteId": site_id}
     hash_keys = ["Name", "Address"] + list(other_fields.keys())
     return add_or_update_record(
-        EVRoamSites, unique_keys, hash_keys, Name=name, Address=address, **other_fields
+        EVRoamSites,
+        unique_keys,
+        hash_keys,
+        Name=name,
+        Address=address,
+        session=session,
+        **other_fields,
     )
 
 
 def add_or_update_charging_station(
-    charging_station_id, site_id, owner, installation_status, **other_fields
+    charging_station_id,
+    site_id,
+    owner,
+    installation_status,
+    session=None,
+    **other_fields,
 ):
     """
     Adds a new charging station or updates an existing one using SCD
@@ -662,11 +676,17 @@ def add_or_update_charging_station(
         "InstallationStatus": installation_status,
         **other_fields,
     }
-    return add_or_update_record(EVRoamChargingStations, unique_keys, hash_keys, **fields)
+    return add_or_update_record(
+        EVRoamChargingStations, unique_keys, hash_keys, session=session, **fields
+    )
 
 
 def add_or_update_availability(
-    charging_station_id, availability_status, availability_time, **other_fields
+    charging_station_id,
+    availability_status,
+    availability_time,
+    session=None,
+    **other_fields,
 ):
     """
     Adds a new availability record or updates an existing one for a charging
@@ -700,11 +720,18 @@ def add_or_update_availability(
         "AvailabilityTime": availability_time,
         **other_fields,
     }
-    return add_or_update_record(EVRoamAvailabilities, unique_keys, hash_keys, **fields)
+    return add_or_update_record(
+        EVRoamAvailabilities, unique_keys, hash_keys, session=session, **fields
+    )
 
 
 def add_or_update_connector(
-    charging_station_id, connector_id, connector_type, operation_status, **other_fields
+    charging_station_id,
+    connector_id,
+    connector_type,
+    operation_status,
+    session=None,
+    **other_fields,
 ):
     """
     Adds a new connector record or updates an existing one
@@ -732,53 +759,94 @@ def add_or_update_connector(
     Raises:
         Exception: If any database operation fails.
     """
-    unique_keys = {"ChargingStationId": charging_station_id, "ConnectorId": connector_id}
+    unique_keys = {
+        "ChargingStationId": charging_station_id,
+        "ConnectorId": connector_id,
+    }
     hash_keys = ["ConnectorType", "OperationStatus"] + list(other_fields.keys())
     fields = {
         "ConnectorType": connector_type,
         "OperationStatus": operation_status,
         **other_fields,
     }
-    return add_or_update_record(EVRoamConnectors, unique_keys, hash_keys, **fields)
+    return add_or_update_record(
+        EVRoamConnectors, unique_keys, hash_keys, session=session, **fields
+    )
+
 
 def write_sites_to_db(dataframe):
-    for _, row in dataframe.iterrows():
-        site_data = row.to_dict()
-        try:
-            add_or_update_evroam_site(
-                site_data.pop('SiteId'),
-                site_data.pop('Name'),
-                site_data.pop('Address'),
-                **site_data
-            )
-        except Exception as exception:
-            logging.error(f"Error adding or updating site: {exception}")
+    """
+    Writes charging station site data to the database.
+
+    Args:
+        dataframe (pandas.DataFrame): A DataFrame containing charging station site data.
+
+    Returns:
+        None
+    """
+    with session_scope() as session:
+        for _, row in dataframe.iterrows():
+            site_data = row.to_dict()
+            try:
+                add_or_update_evroam_site(
+                    site_data.pop("SiteId"),
+                    site_data.pop("Name"),
+                    site_data.pop("Address"),
+                    session=session,
+                    **site_data,
+                )
+            except Exception as exception:
+                logging.error("Error adding or updating site: %s", exception)
 
 
 def write_chargingstations_to_db(dataframe):
-    for _, row in dataframe.iterrows():
-        charging_station_data = row.to_dict()
-        try:
-            add_or_update_charging_station(
-                charging_station_data.pop('ChargingStationId'),
-                charging_station_data.pop('SiteId'),
-                charging_station_data.pop('Owner'),
-                charging_station_data.pop('InstallationStatus'),
-                **charging_station_data
-            )
-        except Exception as exception:
-            logging.error(f"Error adding or updating charging station: {exception}")
+    """
+    Writes charging station data to the database.
+
+    Args:
+        dataframe (pandas.DataFrame): A DataFrame containing charging station data.
+
+    Returns:
+        None
+    """
+    with session_scope() as session:
+        for _, row in dataframe.iterrows():
+            charging_station_data = row.to_dict()
+            try:
+                add_or_update_charging_station(
+                    charging_station_data.pop("ChargingStationId"),
+                    charging_station_data.pop("SiteId"),
+                    charging_station_data.pop("Owner"),
+                    charging_station_data.pop("InstallationStatus"),
+                    session=session,
+                    **charging_station_data,
+                )
+            except Exception as exception:
+                logging.error(
+                    "Error adding or updating charging station: %s", exception
+                )
 
 
 def write_availabilities_to_db(dataframe):
-    for _, row in dataframe.iterrows():
-        availability_data = row.to_dict()
-        try:
-            add_or_update_availability(
-                availability_data.pop('ChargingStationId'),
-                availability_data.pop('AvailabilityStatus'),
-                availability_data.pop('AvailabilityTime'),
-                **availability_data
-            )
-        except Exception as exception:
-            logging.error(f"Error adding or updating availability: {exception}")
+    """
+    Writes availability data to the database.
+
+    Args:
+        dataframe (pandas.DataFrame): A DataFrame containing availability data.
+
+    Returns:
+        None
+    """
+    with session_scope() as session:
+        for _, row in dataframe.iterrows():
+            availability_data = row.to_dict()
+            try:
+                add_or_update_availability(
+                    availability_data.pop("ChargingStationId"),
+                    availability_data.pop("AvailabilityStatus"),
+                    availability_data.pop("AvailabilityTime"),
+                    session=session,
+                    **availability_data,
+                )
+            except Exception as exception:
+                logging.error("Error adding or updating availability: %s", exception)
