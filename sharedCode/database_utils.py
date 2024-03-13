@@ -14,15 +14,17 @@ from sqlalchemy import create_engine, CHAR
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import String, Float, Boolean, Integer, DateTime
-from sqlalchemy import Column, VARBINARY, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, VARBINARY
+#from sqlalchemy import ForeignKey
+#from sqlalchemy.orm import relationship
 
 env = os.getenv("env", "dev")
+
+SCHEMA = "EECAEVRoam"
 
 Base = declarative_base()
 
 # pylint: disable=too-few-public-methods
-
 
 class EVRoamSites(Base):
     """
@@ -31,7 +33,7 @@ class EVRoamSites(Base):
     and various attributes that describe the site's features and offerings.
     """
     __tablename__ = "dboEVRoamSites"
-    __table_args__ = {"schema": "EECAEVRoam"}
+    __table_args__ = {"schema": SCHEMA}
     ODSdboEVRoamSitesSKID = Column(Integer, primary_key=True, autoincrement=True)
     AccessLocations = Column(String(4096), info={"description": "JSON string of access locations."})
     Address = Column(String(2048), info={"description": "Physical address of the site."})
@@ -85,7 +87,7 @@ class EVRoamChargingStations(Base):
     the station's operational status, and its physical characteristics.
     """
     __tablename__ = "dboEVRoamChargingStations"
-    __table_args__ = {"schema": "EECAEVRoam"}
+    __table_args__ = {"schema": SCHEMA}
     ODSdboEVRoamChargingStationsSKID = Column(Integer, primary_key=True, autoincrement=True)
     AssetId = Column(
         String(255),
@@ -223,7 +225,7 @@ class EVRoamAvailabilities(Base):
     and includes timestamps for these status updates.
     """
     __tablename__ = "dboEVRoamAvailabilities"
-    __table_args__ = {"schema": "EECAEVRoam"}
+    __table_args__ = {"schema": SCHEMA}
     ODSdboEVRoamAvailabilitiesSKID = Column(
         Integer,
         primary_key=True,
@@ -345,7 +347,7 @@ class EVRoamConnectors(Base):
     """
 
     __tablename__ = "dboEVRoamConnectors"
-    __table_args__ = {"schema": "EECAEVRoam"}
+    __table_args__ = {"schema": SCHEMA}
 
     connectorId = Column(
         String(255),
@@ -386,7 +388,7 @@ class EVRoamConnectors(Base):
     #charging_station = relationship("EVRoamChargingStations", back_populates="connectors")
 
 
-def get_engine():
+def get_engine(verbose=False):
     """
     Creates and returns a SQLAlchemy engine instance configured
     for Azure SQL Database using Active Directory MSI authentication.
@@ -406,17 +408,17 @@ def get_engine():
     else:
         auth_method = "Authentication=ActiveDirectoryInteractive"
     params = urllib.parse.quote_plus(
-        f"Driver={{ODBC Driver 17 for SQL Server}};"
+        f"Driver={{ODBC Driver 18 for SQL Server}};"
         f"Server=tcp:{server},1433;"
         f"Database={database};"
         f"{auth_method};"
         "Encrypt=yes;"
         "TrustServerCertificate=no;"
         "Connection Timeout=30;"
-    )    
+    )
     connection_url = f"mssql+pyodbc:///?odbc_connect={params}"
     print(connection_url)
-    engine = create_engine(connection_url, echo=True)
+    engine = create_engine(connection_url, echo=verbose)
     return engine
 
 
@@ -493,6 +495,44 @@ def validate_required_fields(model_class, provided_fields):
                 raise ValueError(f"Missing required field: {column.name}")
 
 
+#def add_or_update_record(model, unique_keys, hash_keys, **fields):
+#    session = get_session()
+#    try:
+#        # Generate hash key for incoming data
+#        hash_values = [fields[key] for key in hash_keys]
+#        incoming_hash = generate_hash_key(*hash_values)
+#
+#        # Check if the record already exists and if it's the current version
+#        query = session.query(model).filter_by(**unique_keys, ODSIsCurrent=True)
+#        existing_record = query.first()
+#
+#        if existing_record and existing_record.ODSHashKey == incoming_hash:
+#            return getattr(existing_record, model.__primary_key__)  # Assuming a single PK field
+#
+#        if existing_record:
+#            existing_record.ODSEffectiveTo = datetime.now()
+#            existing_record.ODSIsCurrent = False
+#
+#        # Insert new or updated record as current
+#        new_record = model(
+#            **unique_keys,
+#            **fields,
+#            ODSEffectiveFrom=datetime.now(),
+#            ODSEffectiveTo=None,
+#            ODSIsCurrent=True,
+#            ODSHashKey=incoming_hash,
+#        )
+#        session.add(new_record)
+#        session.commit()
+#        return getattr(new_record, model.__primary_key__)
+#    except Exception as exception:
+#        session.rollback()
+#        logging.warning("Error: %s", exception)
+#        raise
+#    finally:
+#        session.close()
+
+
 def add_or_update_record(model, unique_keys, hash_keys, **fields):
     """
     Adds a new record or updates an existing one using SCD Type 2 logic.
@@ -511,44 +551,6 @@ def add_or_update_record(model, unique_keys, hash_keys, **fields):
     Returns:
         The primary key of the newly added or updated record.
     """
-    session = get_session()
-    try:
-        # Generate hash key for incoming data
-        hash_values = [fields[key] for key in hash_keys]
-        incoming_hash = generate_hash_key(*hash_values)
-
-        # Check if the record already exists and if it's the current version
-        query = session.query(model).filter_by(**unique_keys, ODSIsCurrent=True)
-        existing_record = query.first()
-
-        if existing_record and existing_record.ODSHashKey == incoming_hash:
-            return getattr(existing_record, model.__primary_key__)  # Assuming a single PK field
-
-        if existing_record:
-            existing_record.ODSEffectiveTo = datetime.now()
-            existing_record.ODSIsCurrent = False
-
-        # Insert new or updated record as current
-        new_record = model(
-            **unique_keys,
-            **fields,
-            ODSEffectiveFrom=datetime.now(),
-            ODSEffectiveTo=None,
-            ODSIsCurrent=True,
-            ODSHashKey=incoming_hash,
-        )
-        session.add(new_record)
-        session.commit()
-        return getattr(new_record, model.__primary_key__)
-    except Exception as exception:
-        session.rollback()
-        logging.warning("Error: %s", exception)
-        raise
-    finally:
-        session.close()
-
-
-def add_or_update_record(model, unique_keys, hash_keys, **fields):
     session = get_session()
     try:
         # Generate hash key for incoming data
@@ -694,8 +696,8 @@ def add_or_update_availability(
     unique_keys = {"ChargingStationId": charging_station_id}
     hash_keys = ["AvailabilityStatus", "AvailabilityTime"] + list(other_fields.keys())
     fields = {
-        "AvailabilityStatus": AvailabilityStatus,
-        "AvailabilityTime": AvailabilityTime,
+        "AvailabilityStatus": availability_status,
+        "AvailabilityTime": availability_time,
         **other_fields,
     }
     return add_or_update_record(EVRoamAvailabilities, unique_keys, hash_keys, **fields)
@@ -737,4 +739,46 @@ def add_or_update_connector(
         "OperationStatus": operation_status,
         **other_fields,
     }
-    return add_or_update_record(Connectors, unique_keys, hash_keys, **fields)
+    return add_or_update_record(EVRoamConnectors, unique_keys, hash_keys, **fields)
+
+def write_sites_to_db(dataframe):
+    for _, row in dataframe.iterrows():
+        site_data = row.to_dict()
+        try:
+            add_or_update_evroam_site(
+                site_data.pop('SiteId'),
+                site_data.pop('Name'),
+                site_data.pop('Address'),
+                **site_data
+            )
+        except Exception as exception:
+            logging.error(f"Error adding or updating site: {exception}")
+
+
+def write_chargingstations_to_db(dataframe):
+    for _, row in dataframe.iterrows():
+        charging_station_data = row.to_dict()
+        try:
+            add_or_update_charging_station(
+                charging_station_data.pop('ChargingStationId'),
+                charging_station_data.pop('SiteId'),
+                charging_station_data.pop('Owner'),
+                charging_station_data.pop('InstallationStatus'),
+                **charging_station_data
+            )
+        except Exception as exception:
+            logging.error(f"Error adding or updating charging station: {exception}")
+
+
+def write_availabilities_to_db(dataframe):
+    for _, row in dataframe.iterrows():
+        availability_data = row.to_dict()
+        try:
+            add_or_update_availability(
+                availability_data.pop('ChargingStationId'),
+                availability_data.pop('AvailabilityStatus'),
+                availability_data.pop('AvailabilityTime'),
+                **availability_data
+            )
+        except Exception as exception:
+            logging.error(f"Error adding or updating availability: {exception}")

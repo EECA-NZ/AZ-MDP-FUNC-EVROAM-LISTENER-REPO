@@ -8,3 +8,5 @@ inflection
 pandas
 requests
 azure-identity
+SQLAlchemy
+pyodbc

@@ -11,11 +11,18 @@ from inflection import camelize
 from azure.storage.blob import BlobServiceClient
 import azure.functions as func
 
+from sharedCode import database_utils
 from constants import *
 CONNECT_STR = os.getenv('StorageAccountConnectionString')
 if not CONNECT_STR:
     raise ValueError("StorageAccountConnectionString is not set or is empty!")
 blob_service_client = BlobServiceClient.from_connection_string(CONNECT_STR)
+
+WRITE_TO_DB = {
+    "chargingstations": database_utils.write_chargingstations_to_db,
+    "sites": database_utils.write_sites_to_db,
+    "availabilities": database_utils.write_availabilities_to_db
+}
 
 def main(mytimer: func.TimerRequest) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(
@@ -88,6 +95,8 @@ def main(mytimer: func.TimerRequest) -> None:
             if blob_prefix == "chargingstations":
                 data['availabilities'].append(dataframe[AVAILABILITIES_COLUMNS].copy())
                 dataframe.drop(columns=CHARGINGSTATIONS_DROP_COLUMNS, inplace=True)
+
+            WRITE_TO_DB[blob_prefix](dataframe)
 
             csv_str = dataframe.to_csv(index=False)
             blob_file_path = CSV_FILE_PATH['path'][blob_prefix]

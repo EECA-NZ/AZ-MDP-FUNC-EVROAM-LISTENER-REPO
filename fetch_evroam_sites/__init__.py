@@ -13,6 +13,8 @@ from inflection import camelize
 #### Constants based on provided environment
 
 from constants import *
+from sharedCode import database_utils
+
 CONNECT_STR = os.getenv('StorageAccountConnectionString')
 CONTAINER_NAME = CSV_FILE_PATH['container']
 BLOB_NAME = CSV_FILE_PATH['path']['sites']
@@ -35,6 +37,8 @@ def main(mytimer: func.TimerRequest) -> None:
     if all_data:
         df = process_data_to_dataframe(all_data)
         logging.info(f"Collected site data: {len(df)} rows")
+        database_utils.write_sites_to_db(df)
+        logging.info("Site data written to SQL Database")
         upload_csv_to_blob(df)
         logging.info(f"Delivered site data to {BLOB_NAME}")
     logging.info('Python timer trigger function ran at %s', utc_timestamp)

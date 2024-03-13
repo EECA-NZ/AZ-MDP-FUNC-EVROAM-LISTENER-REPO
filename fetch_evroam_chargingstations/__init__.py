@@ -13,6 +13,7 @@ from inflection import camelize
 #### Constants based on provided environment
 
 from constants import *
+from sharedCode import database_utils
 CONNECT_STR = os.getenv('StorageAccountConnectionString')
 CONTAINER_NAME = CSV_FILE_PATH['container']
 CHARGINGSTATIONS_BLOB_NAME = CSV_FILE_PATH['path']['chargingstations']
@@ -35,6 +36,9 @@ def main(mytimer: func.TimerRequest) -> None:
     all_data = fetch_evroam_chargingstations_data()
     if all_data:
         availabilities, chargingstations = process_data_to_dataframes(all_data)
+        database_utils.write_availabilities_to_db(availabilities)
+        database_utils.write_chargingstations_to_db(chargingstations)
+        logging.info("Charging Station and Availability data written to SQL Database")
         upload_csv_to_blob(availabilities, AVAILABILITIES_BLOB_NAME)
         upload_csv_to_blob(chargingstations, CHARGINGSTATIONS_BLOB_NAME)
     logging.info('Python timer trigger function ran at %s', utc_timestamp)
