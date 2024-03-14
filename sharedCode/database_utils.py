@@ -539,9 +539,12 @@ def add_or_update_record(model, unique_keys, hash_keys, session=None, **fields):
         existing_record = query.first()
 
         if existing_record and existing_record.ODSHashKey == incoming_hash:
+            logging.debug(f"No material change detected for {model.__name__} with ID {unique_keys}.")
             # Assuming a single PK field, dynamically get the PK name and value
             pk_name = model.__table__.primary_key.columns.keys()[0]
             return getattr(existing_record, pk_name)
+        else:
+            logging.debug(f"Material change detected or new record for {model.__name__}: {fields}.")
 
         if existing_record:
             existing_record.ODSEffectiveTo = datetime.now()
@@ -573,6 +576,29 @@ def add_or_update_record(model, unique_keys, hash_keys, session=None, **fields):
             session.close()
 
 
+def get_dynamic_hash_keys(model, exclude=None):
+    """
+    Generate a list of hash keys for a given SQLAlchemy model,
+    excluding any fields that match certain criteria.
+
+    Args:
+        model (Base): The SQLAlchemy model class for the table.
+        exclude (list): List of strings to exclude columns that contain any of these.
+
+    Returns:
+        list: A list of strings representing the hash keys.
+    """
+    if exclude is None:
+        exclude = []
+
+    hash_keys = []
+    for column in model.__table__.columns:
+        column_name = column.name
+        if not any(excluded in column_name for excluded in exclude):
+            hash_keys.append(column_name)
+    return hash_keys
+
+
 def add_or_update_evroam_site(site_id, name, address, session=None, **other_fields):
     """
     Adds a new EVRoam site or updates an existing one using SCD
@@ -600,7 +626,8 @@ def add_or_update_evroam_site(site_id, name, address, session=None, **other_fiel
         Exception: If any database operation fails.
     """
     unique_keys = {"SiteId": site_id}
-    hash_keys = ["Name", "Address"] + list(other_fields.keys())
+    hash_keys = get_dynamic_hash_keys(EVRoamSites, exclude=["WaterMark", "ODS"])
+
     return add_or_update_record(
         EVRoamSites,
         unique_keys,
@@ -646,7 +673,8 @@ def add_or_update_charging_station(
         Exception: If any database operation fails.
     """
     unique_keys = {"ChargingStationId": charging_station_id}
-    hash_keys = ["SiteId", "Owner", "InstallationStatus"] + list(other_fields.keys())
+    hash_keys = get_dynamic_hash_keys(EVRoamChargingStations, exclude=["WaterMark", "ODS"])
+
     fields = {
         "SiteId": site_id,
         "Owner": owner,
@@ -691,7 +719,8 @@ def add_or_update_availability(
         Exception: If any database operation fails.
     """
     unique_keys = {"ChargingStationId": charging_station_id}
-    hash_keys = ["AvailabilityStatus", "AvailabilityTime"] + list(other_fields.keys())
+    hash_keys = get_dynamic_hash_keys(EVRoamAvailabilities, exclude=["WaterMark", "ODS"])
+
     fields = {
         "AvailabilityStatus": availability_status,
         "AvailabilityTime": availability_time,
