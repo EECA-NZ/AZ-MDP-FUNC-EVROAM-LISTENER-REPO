@@ -39,7 +39,13 @@ class EVRoamSites(Base):
 
     __tablename__ = "dboEVRoamSites"
     __table_args__ = {"schema": SCHEMA}
-    ODSdboEVRoamSitesSKID = Column(Integer, primary_key=True, autoincrement=True)
+    SiteId = Column(
+        String(255),
+        index=True,
+        info={
+            "description": "Vendor provided UNIQUE ID to link to the ChargingStation worksheet."
+        },
+    )
     AccessLocations = Column(
         String(4096), info={"description": "JSON string of access locations."}
     )
@@ -73,18 +79,12 @@ class EVRoamSites(Base):
             "description": "Flag to indicate if the provider has marked the site as deleted."
         },
     )
-    SiteId = Column(
-        String(255),
-        index=True,
-        info={
-            "description": "Vendor provided UNIQUE ID to link to the ChargingStation worksheet."
-        },
-    )
     WaterMark = Column(
         DateTime,
         default=datetime.utcnow,
         info={"description": "Timestamp for the last update."},
     )
+    ODSdboEVRoamSitesSKID = Column(Integer, primary_key=True, autoincrement=True)
     ODSBatchID = Column(Integer, info={"description": "Batch ID for the operation."})
     ODSEffectiveFrom = Column(
         DateTime, info={"description": "Effective from date for SCD."}
@@ -113,8 +113,19 @@ class EVRoamChargingStations(Base):
 
     __tablename__ = "dboEVRoamChargingStations"
     __table_args__ = {"schema": SCHEMA}
-    ODSdboEVRoamChargingStationsSKID = Column(
-        Integer, primary_key=True, autoincrement=True
+    ChargingStationId = Column(
+        String(255),
+        index=True,
+        info={"description": "Vendor provided UNIQUE ID."},
+    )
+    SiteId = Column(
+        String(36),
+        info={
+            "description": (
+                "SiteId from the previous Site worksheet. IDs in this column do "
+                "not need to be unique as you can have many charging stations to one site."
+            )
+        },
     )
     AssetId = Column(
         String(255),
@@ -125,17 +136,13 @@ class EVRoamChargingStations(Base):
             )
         },
     )
-    ChargingStationId = Column(
-        String(255),
-        index=True,
-        info={
-            "description": "Vendor provided UNIQUE ID to link to the Connector worksheet."
-        },
-    )
     Connectors = Column(
         String(4096),
         info={
-            "description": "Maximum of 3 public image URLs per charging station comma separated."
+            "description": (
+                "JSON string representing connector "
+                "information for this Charging Station."
+            )
         },
     )
     Current = Column(
@@ -220,19 +227,13 @@ class EVRoamChargingStations(Base):
             )
         },
     )
-    SiteId = Column(
-        String(36),
-        info={
-            "description": (
-                "SiteId from the previous Site worksheet. IDs in this column do "
-                "not need to be unique as you can have many charging stations to one site."
-            )
-        },
-    )
     WaterMark = Column(
         DateTime,
         default=datetime.utcnow,
         info={"description": "Timestamp for the last update."},
+    )
+    ODSdboEVRoamChargingStationsSKID = Column(
+        Integer, primary_key=True, autoincrement=True
     )
     ODSBatchID = Column(Integer, info={"description": "Batch ID for the operation."})
     ODSEffectiveFrom = Column(
@@ -262,18 +263,11 @@ class EVRoamAvailabilities(Base):
 
     __tablename__ = "dboEVRoamAvailabilities"
     __table_args__ = {"schema": SCHEMA}
-    ODSdboEVRoamAvailabilitiesSKID = Column(
-        Integer,
-        primary_key=True,
-        autoincrement=True,
-        info={"description": "Auto-incremented primary key."},
-    )
-    AvailabilityStatus = Column(
+    ChargingStationId = Column(
         String(255),
         info={
             "description": (
-                "Current availability status of the charging "
-                "station (e.g., Available, Occupied)."
+                "The charging station this availability record pertains to."
             )
         },
     )
@@ -281,11 +275,12 @@ class EVRoamAvailabilities(Base):
         DateTime,
         info={"description": "Timestamp when the availability status was recorded."},
     )
-    ChargingStationId = Column(
+    AvailabilityStatus = Column(
         String(255),
         info={
             "description": (
-                "The charging station this availability record pertains to."
+                "Current availability status of the charging "
+                "station (e.g., Available, Occupied)."
             )
         },
     )
@@ -305,6 +300,12 @@ class EVRoamAvailabilities(Base):
         DateTime,
         default=datetime.utcnow,
         info={"description": "Timestamp for the last update of this record."},
+    )
+    ODSdboEVRoamAvailabilitiesSKID = Column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+        info={"description": "Auto-incremented primary key."},
     )
     ODSBatchID = Column(
         Integer,
@@ -361,50 +362,6 @@ class EVRoamAvailabilities(Base):
                 "An external identifier that can be used to link "
                 "this record to external systems or datasets."
             )
-        },
-    )
-
-
-class EVRoamConnectors(Base):
-    """
-    Represents a connector for an EV charging station within the EVRoam ecosystem.
-    This model stores information about individual connectors, including their type
-    and operational status.
-    """
-
-    __tablename__ = "dboEVRoamConnectors"
-    __table_args__ = {"schema": SCHEMA}
-
-    connectorId = Column(
-        String(255),
-        primary_key=True,
-        info={"description": "Unique ID for the connector."},
-    )
-    chargingStationId = Column(
-        String(255),
-        nullable=False,
-        info={
-            "description": (
-                "chargingStationId from the previous ChargingStation worksheet. "
-                "IDs in this column do not need to be unique as you can have many "
-                "connectors to one chargingStation."
-            )
-        },
-    )
-    connectorType = Column(
-        String(255),
-        info={
-            "description": (
-                'Acceptable values are: "Type 1 Tethered", '
-                '"Type 2 Tethered", "Type 2 Socketed", "CHAdeMO", '
-                '"Type 1 CCS", "Type 2 CCS".'
-            )
-        },
-    )
-    operationStatus = Column(
-        String(255),
-        info={
-            "description": 'Acceptable values are: "Operative", "Inoperative", "Unknown".'
         },
     )
 
@@ -741,55 +698,6 @@ def add_or_update_availability(
     }
     return add_or_update_record(
         EVRoamAvailabilities, unique_keys, hash_keys, session=session, **fields
-    )
-
-
-def add_or_update_connector(
-    charging_station_id,
-    connector_id,
-    connector_type,
-    operation_status,
-    session=None,
-    **other_fields,
-):
-    """
-    Adds a new connector record or updates an existing one
-    for a charging station using SCD Type 2 logic.
-
-    This function checks if a connector record for the provided `charging_station_id`
-    and `connector_id` already exists and if changes are detected,
-    it marks the existing record as historical (sets `ODSEffectiveTo` to now) and inserts
-    a new record with the current data.
-    If no existing record is found, it inserts a new record.
-
-    Args:
-        charging_station_id (str): The unique identifier of
-        the charging station to which the connector belongs.
-        connector_id (str): The unique identifier of the connector.
-        connector_type (str): The type of the connector (e.g., "Type 2 Tethered", "CHAdeMO").
-        operation_status (str): The current operational status
-        of the connector (e.g., "Operative", "Inoperative").
-        **other_fields: Additional fields related to the connector, passed as keyword arguments.
-        These fields should match the column names of the `Connectors` table.
-
-    Returns:
-        str: The `connector_id` of the newly added or updated connector record.
-
-    Raises:
-        Exception: If any database operation fails.
-    """
-    unique_keys = {
-        "ChargingStationId": charging_station_id,
-        "ConnectorId": connector_id,
-    }
-    hash_keys = ["ConnectorType", "OperationStatus"] + list(other_fields.keys())
-    fields = {
-        "ConnectorType": connector_type,
-        "OperationStatus": operation_status,
-        **other_fields,
-    }
-    return add_or_update_record(
-        EVRoamConnectors, unique_keys, hash_keys, session=session, **fields
     )
 
 
