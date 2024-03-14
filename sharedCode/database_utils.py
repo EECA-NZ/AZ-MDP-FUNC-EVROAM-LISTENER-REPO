@@ -446,6 +446,7 @@ def get_session():
         database operations.
     """
     engine = get_engine()
+    create_tables(engine)
     session = sessionmaker(bind=engine)
     return session()
 
