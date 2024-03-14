@@ -10,7 +10,9 @@ import logging
 import hashlib
 from datetime import datetime
 from contextlib import contextmanager
-
+import pyodbc
+import sqlalchemy
+import pandas as pd
 from sqlalchemy import create_engine, CHAR
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -422,23 +424,40 @@ def get_engine(verbose=False):
     """
     server = f"eeca-sql-{env}-aue.database.windows.net"
     database = f"eeca-sqldb-{env}-aue-01"
-    if os.getenv("WEBSITE_HOSTNAME"):  # Set in Azure Functions
+    if os.getenv("WEBSITE_HOSTNAME"):
         auth_method = "Authentication=ActiveDirectoryMsi"
     else:
         auth_method = "Authentication=ActiveDirectoryInteractive"
-    params = urllib.parse.quote_plus(
-        f"Driver={{ODBC Driver 18 for SQL Server}};"
-        f"Server=tcp:{server},1433;"
-        f"Database={database};"
-        f"{auth_method};"
-        "Encrypt=yes;"
-        "TrustServerCertificate=no;"
-        "Connection Timeout=30;"
-    )
-    connection_url = f"mssql+pyodbc:///?odbc_connect={params}"
-    print(connection_url)
-    engine = create_engine(connection_url, echo=verbose)
-    return engine
+    drivers_to_try = [
+        "ODBC Driver 18 for SQL Server",
+        "ODBC Driver 17 for SQL Server",
+        "ODBC Driver 13 for SQL Server",
+    ]
+    for driver in drivers_to_try:
+        try:
+            params = urllib.parse.quote_plus(
+                f"Driver={{{driver}}};"
+                f"Server=tcp:{server},1433;"
+                f"Database={database};"
+                f"{auth_method};"
+                "Encrypt=yes;"
+                "TrustServerCertificate=no;"
+                "Connection Timeout=30;"
+            )
+            connection_url = f"mssql+pyodbc:///?odbc_connect={params}"
+            engine = create_engine(connection_url, echo=verbose)
+            # Test the connection
+            with engine.connect() as _:
+                logging.info("Successfully connected using %s", driver)
+                return engine
+        except sqlalchemy.exc.DBAPIError as error:
+            logging.info("Failed to connect using %s: %s", driver, error)
+            logging.info("Trying next driver...")
+        except pyodbc.Error as error:  # pylint: disable=c-extension-no-member
+            logging.info("Failed to connect using %s: %s", driver, error)
+            logging.info("Trying next driver...")
+    # pylint: disable=broad-exception-raised
+    raise Exception("Failed to connect to SQL using any of the drivers tried.")
 
 
 def create_tables(engine):
@@ -784,6 +803,9 @@ def write_sites_to_db(dataframe):
     Returns:
         None
     """
+    # Replace `nan` values with `None` for proper SQL NULL handling
+    dataframe = dataframe.where(pd.notnull(dataframe), None)
+
     with session_scope() as session:
         for _, row in dataframe.iterrows():
             site_data = row.to_dict()
@@ -809,6 +831,9 @@ def write_chargingstations_to_db(dataframe):
     Returns:
         None
     """
+    # Replace `nan` values with `None` for proper SQL NULL handling
+    dataframe = dataframe.where(pd.notnull(dataframe), None)
+
     with session_scope() as session:
         for _, row in dataframe.iterrows():
             charging_station_data = row.to_dict()
@@ -837,6 +862,9 @@ def write_availabilities_to_db(dataframe):
     Returns:
         None
     """
+    # Replace `nan` values with `None` for proper SQL NULL handling
+    dataframe = dataframe.where(pd.notnull(dataframe), None)
+
     with session_scope() as session:
         for _, row in dataframe.iterrows():
             availability_data = row.to_dict()
