@@ -4,18 +4,50 @@
 
 This repository is for the function app deployed at `eeca-func-DWBI-evroam-listener-[dev/prd]-aue` in the resource group `eeca-rg-DWBI-[dev/prd]-aue`.
 
-It contains four functions:
+## Functions Overview
 
-* `evroam_listener` is an endpoint to which the evroam push notification subscription can be directed. When notified by evroam, it pulls down json files containing updates to the evroam dataset.
-* `evroam_aggregator` runs on a cron schedule and aggregates all of the objects that have been retrieved into an excel workbook for delivery into our data warehousing system.
-* `fetch_evroam_sites` runs on a cron schedule and pulls EVRoam site information for delivery into our data warehousing system. This is to ensure that the EVRoam site data is up-to-date, even if the push notifications fail for any reason.
-* `fetch_evroam_chargingstations` runs on a cron schedule and pulls EVRoam charging station and availability information for delivery into our data warehousing system. This is to ensure that the EVRoam data is up-to-date, even if the push notifications fail for any reason.
+* `evroam_listener` - Receives push notifications from EVRoam, fetching JSON files with dataset updates.
+* `fetch_evroam_sites` - Fetches EVRoam site information periodically, ensuring data remains up-to-date.
+* `fetch_evroam_chargingstations` - Fetches charging station and availability information periodically as a backup to push notifications.
 
 Once the function is deployed into the `dev`/`prd` environment, follow the instructions in the `scripts/subscribe_evroam_listener.py` to activate a subscription to push notifications from evroam. Note that only one subscription can be active (for a given EVRoam API key) at a time.
 
-## Development process overview:
+## Managed Identity Configuration
 
-We use the Azure Functions extension in Visual Studio Code to develop Python function apps. The function is tested locally before deploying it to the environment of Azure Functions. Development of the function app is done in the `dev` environment. Once the function app is tested and working as expected, it is deployed to the `prd` environment.
+To enable Managed Identity for your Azure Function App and grant it access to an Azure SQL Database, follow these steps:
+
+### Enable Managed Identity
+
+1. Navigate to your Function App in the Azure Portal.
+2. Under **Platform features**, find the **Identity** section.
+3. Enable **System Assigned Managed Identity**.
+
+### Grant Access to SQL Server
+
+1. Ensure SQL Server allows Azure services to access it.
+2. Grant the Function App's managed identity appropriate roles (e.g., **SQL DB Contributor**).
+
+### SQL Permissions
+
+Ensure that the following SQL commands are present in the `02-AddUsers.sql` postdeployment script of the SQL database:
+```sql
+CREATE USER [eeca-func-DWBI-evroam-listener-[dev/prd]-aue] FOR EXTERNAL PROVIDER;
+CREATE SCHEMA EECAEVROAM
+GRANT CONTROL ON SCHEMA::[EECAEVROAM] TO [your-function-app-name];
+```
+
+### Schema Management
+
+The app uses SQLAlchemy for ORM. Tables are auto-created on first run but not altered. To update the schema during development:
+
+```sql
+DROP TABLE EECAEVROAM.ChargingStations;
+DROP TABLE EECAEVROAM.Sites;
+```
+
+## Development and Deployment
+
+We use Visual Studio Code with the Azure Functions extension for development. The `dev` environment is used for development and testing before deployment to `prd`.
 
 To begin work on the function app, clone the repository from GitHub. The function app is developed in a branch off of the `dev` branch. Merging changes into the `dev` branch triggers the GitHub Actions workflow to deploy the function app to the `dev` environment. Once the function app is ready for deployment, it is merged into the `main` branch. This triggers the GitHub Actions workflow to deploy the function app to the `prd` environment.
 
@@ -63,7 +95,7 @@ func start
 
 ## Manual deployment the function app in the `dev` environment.
 
-Manual deployment is deprecated and has been superseded by the GitHub Actions workflow. The following is retained for reference only.
+Manual deployment to the `dev` environment can be used for testing the app while it is in development. Note that merging to the `dev` branch also will trigger a CICD deployment to the `dev` environment.
 
 It is assumed that this project is active in VSCode (the project has been opened via `Open Folder`), and that the user has logged into Azure with VSCode.
 * Navigate in `Azure Resources` to the `eeca-func-DWBI-evroam-listener-dev-aue` function app.
