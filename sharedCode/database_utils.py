@@ -465,9 +465,25 @@ def session_scope():
         session.close()
 
 
+def normalize_arg(arg):
+    """
+    Normalizes an argument for hashing, focusing on floating-point
+    precision and string trimming.
+    """
+    if isinstance(arg, datetime):
+        return arg.isoformat(timespec="seconds")
+    if isinstance(arg, float):
+        return f"{arg:.10f}"
+    if isinstance(arg, str):
+        return arg.strip().lower()
+    if arg is None:
+        return "None"
+    return str(arg)
+
+
 def generate_hash_key(*args):
     """
-    Generates a SHA-256 hash key from the provided arguments.
+    Generates a SHA-256 hash key from the provided arguments, with enhancements for consistency.
 
     This function concatenates all arguments into a single string and
     generates a SHA-256 hash of this string. It's used to create a unique
@@ -480,8 +496,9 @@ def generate_hash_key(*args):
         bytes: The generated SHA-256 hash key.
     """
     hash_key = hashlib.sha256()
-    for arg in args:
-        hash_key.update(str(arg).encode("utf-8"))
+    sorted_args = sorted([normalize_arg(arg) for arg in args if arg is not None])
+    for arg in sorted_args:
+        hash_key.update(arg.encode("utf-8"))
     return hash_key.digest()
 
 
