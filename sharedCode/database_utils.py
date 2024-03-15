@@ -539,12 +539,17 @@ def add_or_update_record(model, unique_keys, hash_keys, session=None, **fields):
         existing_record = query.first()
 
         if existing_record and existing_record.ODSHashKey == incoming_hash:
-            logging.debug(f"No material change detected for {model.__name__} with ID {unique_keys}.")
+            logging.debug(
+                "No material change detected for %s with ID %s.",
+                model.__name__,
+                unique_keys,
+            )
             # Assuming a single PK field, dynamically get the PK name and value
             pk_name = model.__table__.primary_key.columns.keys()[0]
             return getattr(existing_record, pk_name)
-        else:
-            logging.debug(f"Material change detected or new record for {model.__name__}: {fields}.")
+        logging.debug(
+            "Material change detected or new record for %s: %s.", model.__name__, fields
+        )
 
         if existing_record:
             existing_record.ODSEffectiveTo = datetime.now()
@@ -626,7 +631,9 @@ def add_or_update_evroam_site(site_id, name, address, session=None, **other_fiel
         Exception: If any database operation fails.
     """
     unique_keys = {"SiteId": site_id}
-    hash_keys = get_dynamic_hash_keys(EVRoamSites, exclude=["WaterMark", "ODS"])
+    hash_keys = get_dynamic_hash_keys(
+        EVRoamSites, exclude=["WaterMark", "ODS", "SiteId"]
+    )
 
     return add_or_update_record(
         EVRoamSites,
@@ -673,7 +680,9 @@ def add_or_update_charging_station(
         Exception: If any database operation fails.
     """
     unique_keys = {"ChargingStationId": charging_station_id}
-    hash_keys = get_dynamic_hash_keys(EVRoamChargingStations, exclude=["WaterMark", "ODS"])
+    hash_keys = get_dynamic_hash_keys(
+        EVRoamChargingStations, exclude=["WaterMark", "ODS", "ChargingStationId"]
+    )
 
     fields = {
         "SiteId": site_id,
@@ -719,7 +728,9 @@ def add_or_update_availability(
         Exception: If any database operation fails.
     """
     unique_keys = {"ChargingStationId": charging_station_id}
-    hash_keys = get_dynamic_hash_keys(EVRoamAvailabilities, exclude=["WaterMark", "ODS"])
+    hash_keys = get_dynamic_hash_keys(
+        EVRoamAvailabilities, exclude=["WaterMark", "ODS", "ChargingStationId"]
+    )
 
     fields = {
         "AvailabilityStatus": availability_status,
