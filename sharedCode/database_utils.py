@@ -5,6 +5,7 @@ functions to add or update these entities using SCD Type 2 logic.
 """
 
 import os
+import json
 import urllib
 import logging
 import hashlib
@@ -465,10 +466,10 @@ def session_scope():
         session.close()
 
 
-def normalize_arg(arg):
+def normalize_arg(arg): # pylint: disable=too-many-return-statements
     """
-    Normalizes an argument for hashing, focusing on floating-point
-    precision and string trimming.
+    Normalizes an argument for hashing, focusing on floating-point precision, string trimming,
+    and consistent ordering of lists, dictionaries, and mixed content.
     """
     if isinstance(arg, datetime):
         return arg.isoformat(timespec="seconds")
@@ -476,6 +477,16 @@ def normalize_arg(arg):
         return f"{arg:.10f}"
     if isinstance(arg, str):
         return arg.strip().lower()
+    if isinstance(arg, dict):
+        # Sort dictionaries by keys and normalize each value
+        return json.dumps(
+            {k: normalize_arg(v) for k, v in sorted(arg.items())}, separators=(",", ":")
+        )
+    if isinstance(arg, list):
+        # Recursively normalize each element in the list and sort
+        return json.dumps(
+            sorted([normalize_arg(a) for a in arg], key=str), separators=(",", ":")
+        )
     if arg is None:
         return "None"
     return str(arg)
